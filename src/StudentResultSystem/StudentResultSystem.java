@@ -55,10 +55,6 @@ public class StudentResultSystem extends javax.swing.JFrame {
     
     public StudentResultSystem() {
         initComponents();
-        //listScores  = getListScores();
-        //listModules = getListModules();
-        //setListModules();
-        //uploadDB();
     }
 
     /**
@@ -222,11 +218,6 @@ public class StudentResultSystem extends javax.swing.JFrame {
 
         jtxtDirector.setFont(new java.awt.Font("Segoe UI", 0, 24)); // NOI18N
         jtxtDirector.setEnabled(false);
-        jtxtDirector.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jtxtDirectorActionPerformed(evt);
-            }
-        });
         jPanelCourse.add(jtxtDirector, new org.netbeans.lib.awtextra.AbsoluteConstraints(190, 100, 290, 30));
 
         jtxtFaculty.setFont(new java.awt.Font("Cambria Math", 0, 20)); // NOI18N
@@ -732,6 +723,11 @@ public class StudentResultSystem extends javax.swing.JFrame {
         jbtnAddDirection.setForeground(new java.awt.Color(255, 255, 255));
         jbtnAddDirection.setText("Добавить");
         jbtnAddDirection.setVerticalAlignment(javax.swing.SwingConstants.TOP);
+        jbtnAddDirection.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jbtnAddDirectionActionPerformed(evt);
+            }
+        });
         jPanel8.add(jbtnAddDirection, new org.netbeans.lib.awtextra.AbsoluteConstraints(670, 100, 130, 30));
 
         jTableDirections.setModel(new javax.swing.table.DefaultTableModel(
@@ -806,14 +802,11 @@ public class StudentResultSystem extends javax.swing.JFrame {
         setLocationRelativeTo(null);
     }// </editor-fold>//GEN-END:initComponents
 
-    //Исправить проблемы:
-    //1. Не обращаться к похожим элементам (например предметы и оценки) перебирая их вручную. обрабатывать через цикл либо выполнять поиск по имени(если необходимо выполнить действия только с одним элементом)
-    //2. Все похожие выполнения кода вынести в отдельный метод и вызывать его (Например изменение предметов)
-    //3. Вынести заполнение любых "изменчивых" данных, таких как: Курс, Предмет и т.п либо в отдельный метод, либо в БД(Предпочтительнее)
     public void uploadDB()
     {
             uploadModules();
             uploadStudents();
+            uploadDirections();
     }
     
     
@@ -906,28 +899,61 @@ public class StudentResultSystem extends javax.swing.JFrame {
         
     }
     
+    private void uploadDirections(){
+        
+        try
+        {
+            Class.forName("com.mysql.cj.jdbc.Driver");
+            sqlCon = DriverManager.getConnection(dataCon, username, password);
+            pst = sqlCon.prepareStatement("select * from directions");
+            rs = pst.executeQuery();
+            ResultSetMetaData stData = rs.getMetaData();
+            
+            q = stData.getColumnCount();
+            
+            DefaultTableModel RecordTable = (DefaultTableModel) jTableDirections.getModel();
+            RecordTable.setRowCount(0);
+            while (rs.next())
+            {
+                Vector columnData = new Vector();
+                for (int i = 0; i < q; i++) {
+                    columnData.add(rs.getString("Name"));
+                    columnData.add(rs.getString("CourseCode"));
+                    columnData.add(rs.getString("Faculty"));
+                    columnData.add(rs.getString("Director"));
+                    columnData.add(rs.getString("Teacher"));
+                }
+                RecordTable.addRow(columnData);
+            }
+            
+        }
+        catch(Exception ex)
+        {
+            JOptionPane.showMessageDialog(null, ex);
+        }
+        
+    }
+    
     private void setListModules(){
         int rowCount = jTableModules.getRowCount();
         String[] strList = new String[rowCount + 1];
         strList[0] = "Выберите предмет";
         for(int i = 1; i <= rowCount; i++){
-            //strList[i] = (String)jTableModules.getComponents().;
             strList[i] = (String) jTableModules.getValueAt(i-1, 0);
-            //jTableModules.getValueAt(i, NORMAL)
-      }
-      //jTableModules.get  
-      //String[] strList = new String[] {"Выберите предмет", "Физика", "Математический анализ", "Информационные системы", "Вычислительные технологии"};
-      for(JComboBox c:listModules){
-        c.setModel(new javax.swing.DefaultComboBoxModel<>(strList));
-      }
-      /*jcboModule1.setModel(new javax.swing.DefaultComboBoxModel<>(strList));  
-      jcboModule2.setModel(new javax.swing.DefaultComboBoxModel<>(strList));  
-      jcboModule3.setModel(new javax.swing.DefaultComboBoxModel<>(strList));
-      jcboModule4.setModel(new javax.swing.DefaultComboBoxModel<>(strList));
-      jcboModule5.setModel(new javax.swing.DefaultComboBoxModel<>(strList));
-      jcboModule6.setModel(new javax.swing.DefaultComboBoxModel<>(strList));
-      jcboModule7.setModel(new javax.swing.DefaultComboBoxModel<>(strList));
-      jcboModule8.setModel(new javax.swing.DefaultComboBoxModel<>(strList)); */ 
+        }
+        for(JComboBox c:listModules){
+          c.setModel(new javax.swing.DefaultComboBoxModel<>(strList));
+        }
+    }
+    
+    private void setListDirections(){
+        int rowCount = jTableDirections.getRowCount();
+        String[] strList = new String[rowCount + 1];
+        strList[0] = "Выберите направление";
+        for(int i = 1; i <= rowCount; i++){
+            strList[i] = (String) jTableDirections.getValueAt(i-1, 0);
+        }
+          jcboDirection.setModel(new javax.swing.DefaultComboBoxModel<>(strList));
     }
     
     private JTextField[] getListScores(){
@@ -1003,11 +1029,11 @@ public class StudentResultSystem extends javax.swing.JFrame {
             System.err.format("Принтер не найден", e.getMessage());
         }
     }//GEN-LAST:event_jbtnPrintActionPerformed
-private JFrame frame;
+
     private void jbtnResetActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jbtnResetActionPerformed
         // TODO add your handling code here:
         JTextField jtxt = null;
-        JComboBox jcbo = null; // j ?
+        JComboBox jcbo = null;
         
         for (Component c:jPanelStudent.getComponents())
         {
@@ -1120,34 +1146,22 @@ private JFrame frame;
     }//GEN-LAST:event_jtxtScore1ActionPerformed
 
     private void jbtnTranscriptActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jbtnTranscriptActionPerformed
-        //Сделать проверку на заполнение предмета, вынести список в цикл
-        //Отказаться от табуляции, т.к длина наименования предмета может быть разная
-        String textTranscript = "\t\t Transcript \n"
+        String textTranscript = "\t\t Расшифровка \n"
                 + "================================================\n"
                 + "Регистрация студента Номер: " + jtxtStudentID.getText() + "\n\n"
                 + "ФИО: " + jtxtLastName.getText() + " " + jtxtFirstName.getText() + " " + jtxtPatronymic.getText() + "\n\n";
-        int i = 0;
         int n = 1;
-        for(JComboBox c:listModules){
-            if(c.getSelectedItem() != "Выберите предмет"){
-                textTranscript += n + ". " + c.getSelectedItem() + ": " + listScores[i].getText() + "\n\n";
+        for(int i = 0;i<listModules.length;i++){
+            Object module = listModules[i].getSelectedItem();
+            if(module != "Выберите предмет"){
+                textTranscript += n + ". " + module + ": " + listScores[i].getText() + "\n\n";
                 n++;
             }
-            i++;
         }
-                
-                /*"1: " + jcboModule1.getSelectedItem() + "\t\t\t" + jtxtScore1.getText() + "\n\n"
-                + "2: " + jcboModule2.getSelectedItem() + "\t\t\t" + jtxtScore2.getText() + "\n\n"
-                + "3: " + jcboModule3.getSelectedItem() + "\t\t\t" + jtxtScore3.getText() + "\n\n"
-                + "4: " + jcboModule4.getSelectedItem() + "\t\t\t" + jtxtScore4.getText() + "\n\n"
-                + "5: " + jcboModule5.getSelectedItem() + "\t\t\t" + jtxtScore5.getText() + "\n\n"
-                + "6: " + jcboModule6.getSelectedItem() + "\t\t\t" + jtxtScore6.getText() + "\n\n"
-                + "7: " + jcboModule7.getSelectedItem() + "\t\t\t" + jtxtScore7.getText() + "\n\n"
-                + "8: " + jcboModule8.getSelectedItem() + "\t\t\t" + jtxtScore8.getText() + "\n\n"*/
-                textTranscript += "================================================\n"
-                + "Средний балл: " + jtxtTotalScore.getText() + "\n"
-                + "Оценка: " + jtxtRanking.getText() + "\n"
-                + "Дата: " + jtxtDate.getText() + "\n";
+        textTranscript += "================================================\n"
+        + "Средний балл: " + jtxtTotalScore.getText() + "\n"
+        + "Оценка: " + jtxtRanking.getText() + "\n"
+        + "Дата: " + jtxtDate.getText() + "\n";
         
         jtxtTranscript.setText(textTranscript);
     }//GEN-LAST:event_jbtnTranscriptActionPerformed
@@ -1161,6 +1175,7 @@ private JFrame frame;
         listScores  = getListScores();
         listModules = getListModules();
         setListModules();
+        setListDirections();
     }//GEN-LAST:event_formWindowOpened
 
     private void jcboModule2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jcboModule2ActionPerformed
@@ -1192,18 +1207,9 @@ private JFrame frame;
     }//GEN-LAST:event_jcboModule8ActionPerformed
 
     private void jcboDirectionActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jcboDirectionActionPerformed
-        //Dictionary dict = getDictionaryCourse();
-        
-        //Dictionary dictData = dict.get(jcboCourse.getSelectedItem().toString());
-        
-        //jtxtCourseCode.setText(dict.get(jcboCourse.getSelectedItem().toString()).get("Course"));
-        jtxtCourseCode.setText("ДБ09832");
-        jtxtFaculty.setText("ИМИТ");
-        jtxtDirector.setText("Алексеев А. А.");
-        jtxtTeacher.setText("Иванов И. И.");
-        
-        JTextField jtxt = null;
-        if (jcboDirection.getSelectedItem().equals("Выберите направление"))
+        JTextField jtxt;
+        Object selDirection = jcboDirection.getSelectedItem();
+        if (selDirection.equals("Выберите направление"))
         {
             for (Component c:jPanelCourse.getComponents())
             {
@@ -1211,6 +1217,21 @@ private JFrame frame;
                 {
                     jtxt = (JTextField)c;
                     jtxt.setText(null);
+                }
+            }
+        }
+        else{
+            
+            int rowCount = jTableDirections.getRowCount();
+            //String[] strList = new String[rowCount + 1];
+            //strList[0] = "Выберите направление";
+            for(int i = 1; i <= rowCount; i++){
+                Object nameDirection = (String) jTableDirections.getValueAt(i-1, 0);
+                if (selDirection == nameDirection){
+                    jtxtCourseCode.setText((String) jTableDirections.getValueAt(i-1, 1));
+                    jtxtFaculty.setText((String) jTableDirections.getValueAt(i-1, 2));
+                    jtxtDirector.setText((String) jTableDirections.getValueAt(i-1, 3));
+                    jtxtTeacher.setText((String) jTableDirections.getValueAt(i-1, 4));
                 }
             }
         }
@@ -1281,7 +1302,7 @@ private JFrame frame;
     }//GEN-LAST:event_jbtnAddActionPerformed
 
     private void formWindowClosing(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowClosing
-        frame = new JFrame("Выход");
+        JFrame frame = new JFrame("Выход");
         if(JOptionPane.showConfirmDialog(frame, "Вы действительно хотите выйти?", "Система оценки студентов", 
                 JOptionPane.YES_NO_OPTION) == JOptionPane.YES_NO_OPTION)
         {
@@ -1292,10 +1313,6 @@ private JFrame frame;
             this.setVisible(true);
         }
     }//GEN-LAST:event_formWindowClosing
-
-    private void jtxtDirectorActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jtxtDirectorActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_jtxtDirectorActionPerformed
 
     private void jbtnAddModuleActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jbtnAddModuleActionPerformed
         try
@@ -1323,6 +1340,36 @@ private JFrame frame;
             //java.util.logging.getLogger(StudentResultSystem.class.getName().log)(java.util.logging.Level.SEVERE, null,ex);
         }
     }//GEN-LAST:event_jbtnAddModuleActionPerformed
+
+    private void jbtnAddDirectionActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jbtnAddDirectionActionPerformed
+        try
+        {
+            Class.forName("com.mysql.cj.jdbc.Driver");
+            sqlCon = DriverManager.getConnection(dataCon, username, password);
+            pst = sqlCon.prepareStatement("insert into Directions(Name, CourseCode, Faculty, Director, Teacher) value(?,?,?,?,?)");
+            pst.setString(1,jTxtDirectionInput.getText());
+            pst.setString(2,jTxtCourseCodeInput.getText());
+            pst.setString(3,jTxtFacultyInput.getText());
+            pst.setString(4,jTxtDirectorInput.getText());
+            pst.setString(5,jTxtTeacherInput.getText());
+            pst.executeUpdate();
+            JOptionPane.showMessageDialog(this, "Добавлено направление обучения");
+            uploadDirections();
+            setListDirections();
+            
+        }
+        catch(ClassNotFoundException ex)
+        {
+            JOptionPane.showMessageDialog(this, "Ошибка класс не найден" + ex);
+            //java.util.logging.getLogger(StudentResultSystem.class.getName().log)(java.util.logging.Level.SEVERE, null,ex);
+            
+        }
+        catch(SQLException ex)
+        {
+            JOptionPane.showMessageDialog(this, "Ошибка SQL" + ex);
+            //java.util.logging.getLogger(StudentResultSystem.class.getName().log)(java.util.logging.Level.SEVERE, null,ex);
+        }
+    }//GEN-LAST:event_jbtnAddDirectionActionPerformed
 
     /**
      * @param args the command line arguments
